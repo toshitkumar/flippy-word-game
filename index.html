@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Flippy Word - Infinite Arcade Word Flight</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="game-wrapper">
+    <!-- Top HUD -->
+    <header id="hud">
+      <div class="hud-left">
+        <div class="badge level-badge">
+          <span class="badge-label">LVL</span>
+          <span id="level-display">1</span>
+        </div>
+        <div class="lives-container" id="lives-display">
+          <span class="heart active">❤️</span>
+          <span class="heart active">❤️</span>
+          <span class="heart active">❤️</span>
+        </div>
+        <div id="shield-indicator" class="badge shield-badge hidden">
+          <span>🛡️</span>
+        </div>
+      </div>
+
+      <!-- Target Word Display Area -->
+      <div id="word-target-container">
+        <div class="target-title">SPELL THIS WORD:</div>
+        <div id="word-slots" class="word-slots">
+          <!-- Filled dynamically e.g. [B] [I] [R] [D] -->
+        </div>
+      </div>
+
+      <div class="hud-right">
+        <div class="badge score-badge">
+          <span class="badge-label">PTS</span>
+          <span id="score-display">0</span>
+        </div>
+        <button id="btn-pause" class="icon-btn" aria-label="Pause">⏸️</button>
+      </div>
+    </header>
+
+    <!-- Canvas viewport -->
+    <canvas id="game-canvas"></canvas>
+
+    <!-- Overlay: Start Screen -->
+    <div id="screen-start" class="screen-overlay active">
+      <div class="card-modal">
+        <div class="logo-box">
+          <div class="mascot-float">🪶</div>
+          <h1 class="game-title">FLIPPY<br><span class="accent">WORDS</span></h1>
+        </div>
+        <p class="tagline">Flap. Dodge. Spell!</p>
+
+        <div class="instructions-card">
+          <div class="inst-item">
+            <span class="inst-icon">👆</span>
+            <span><b>Tap / Space</b> to Flap & Fly</span>
+          </div>
+          <div class="inst-item">
+            <span class="inst-icon">🔤</span>
+            <span>Collect glowing <b>letters in order</b></span>
+          </div>
+          <div class="inst-item">
+            <span class="inst-icon">⚠️</span>
+            <span>Dodge <b>pipes</b> & <b>wrong letters</b>!</span>
+          </div>
+        </div>
+
+        <button id="btn-play" class="btn-primary pulse">TAP TO FLY</button>
+        <button id="btn-open-buy" class="btn-secondary buy-btn" style="margin-top: 10px; background: linear-gradient(135deg, #ffd600, #ff9100); color: #212121; font-weight: 900;">⭐ GET FULL GAME - ₹49</button>
+        <div class="high-score-label">BEST SCORE: <span id="start-high-score">0</span></div>
+      </div>
+    </div>
+
+    <!-- Overlay: Level Complete Screen -->
+    <div id="screen-level-complete" class="screen-overlay">
+      <div class="card-modal celebrate">
+        <div class="confetti-icon">🎉</div>
+        <h2>LEVEL COMPLETED!</h2>
+        <div class="completed-word-box">
+          <span class="sub-label">Word Solved:</span>
+          <div id="completed-word" class="highlight-word">BIRD</div>
+        </div>
+        <div class="level-rewards">
+          <div class="reward-item">⭐ +<span id="reward-pts">500</span> Points</div>
+          <div class="reward-item">🔥 Streak Bonus: +<span id="streak-pts">100</span></div>
+        </div>
+        <button id="btn-next-level" class="btn-primary">NEXT LEVEL ➔</button>
+      </div>
+    </div>
+
+    <!-- Overlay: Game Over Screen -->
+    <div id="screen-game-over" class="screen-overlay">
+      <div class="card-modal">
+        <div class="mascot-dizzy">💥</div>
+        <h2 class="game-over-title">CRASHED!</h2>
+        
+        <div class="stats-grid">
+          <div class="stat-box">
+            <span class="stat-name">FINAL SCORE</span>
+            <span id="final-score" class="stat-val">0</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-name">HIGH SCORE</span>
+            <span id="final-high-score" class="stat-val">0</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-name">LEVEL REACHED</span>
+            <span id="final-level" class="stat-val">1</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-name">WORDS SPELLED</span>
+            <span id="final-words-count" class="stat-val">0</span>
+          </div>
+        </div>
+
+        <button id="btn-retry" class="btn-primary pulse">TRY AGAIN 🔁</button>
+      </div>
+    </div>
+
+    <!-- Overlay: Pause Screen -->
+    <div id="screen-pause" class="screen-overlay">
+      <div class="card-modal">
+        <h2>GAME PAUSED</h2>
+        <div class="pause-options">
+          <button id="btn-sound-toggle" class="btn-secondary">🔊 SOUND: ON</button>
+          <button id="btn-resume" class="btn-primary">RESUME ▶</button>
+          <button id="btn-restart" class="btn-secondary">RESTART 🔄</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Overlay: Buy Full Game Modal -->
+    <div id="screen-buy" class="screen-overlay">
+      <div class="card-modal">
+        <div class="confetti-icon">💎</div>
+        <h2>GET FULL GAME</h2>
+        <p style="color: #90caf9; font-size: 13px; margin: 6px 0 16px 0;">Unlimited Infinite Levels & Zero Ads</p>
+        
+        <div style="background: rgba(255,255,255,0.06); padding: 14px; border-radius: 14px; margin-bottom: 16px;">
+          <div style="font-size: 13px; color: #e0e0e0; margin-bottom: 8px;">Scan & Pay via any UPI App:</div>
+          <img id="upi-qr" src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=upi://pay?pa=toshitkumar@upi%26pn=Toshit%20Kumar%26am=49%26cu=INR" alt="UPI QR" style="border-radius: 10px; width: 140px; height: 140px; background: #fff; padding: 6px;">
+          <div style="font-family: 'Fredoka One', cursive; font-size: 24px; color: #ffd600; margin-top: 6px;">₹49 Only</div>
+        </div>
+
+        <a id="btn-upi-direct" href="upi://pay?pa=toshitkumar@upi&pn=Toshit%20Kumar&am=49&cu=INR" class="btn-primary" style="display: block; text-decoration: none; margin-bottom: 10px;">⚡ PAY VIA UPI APP</a>
+        <button id="btn-close-buy" class="btn-secondary">CLOSE ✕</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
