@@ -1,11 +1,11 @@
 /**
- * FLIPPY WORDS - Infinite Arcade Word Flight (Enhanced Edition)
- * Hybrid Flappy Bird + Word Spelling Mechanics + Power-ups & Floating FX
+ * FLIPPY COINS - Infinite Arcade Coin Quest
+ * Pure Level-Based Coin Collector with 3D Spinning Coins, Magnets & Shields
  */
 
 // --- Anti-Tamper & State Protection Helper ---
 const AntiCheat = {
-  _salt: 'FLIPPY_SALT_984321',
+  _salt: 'FLIPPY_COIN_SALT_778129',
   encode(data) {
     const jsonStr = JSON.stringify(data);
     let out = '';
@@ -35,6 +35,7 @@ class SoundManager {
     this.enabled = true;
     this.bgmTimer = null;
     this.bgmStep = 0;
+    this.comboCount = 0;
   }
 
   init() {
@@ -50,7 +51,6 @@ class SoundManager {
 
   startBGM() {
     if (this.bgmTimer) return;
-    // Cheerful 8-step chord arpeggio loop (C - G - Am - F progression)
     const chords = [
       [261.63, 329.63, 392.00], // C
       [196.00, 246.94, 293.66], // G
@@ -63,7 +63,7 @@ class SoundManager {
       const chordIndex = Math.floor(this.bgmStep / 2) % chords.length;
       const noteIndex = this.bgmStep % chords[chordIndex].length;
       const freq = chords[chordIndex][noteIndex];
-      this.playPluckNote(freq * 1.5, 0.04);
+      this.playPluckNote(freq * 1.5, 0.035);
       this.bgmStep++;
     }, 280);
   }
@@ -88,9 +88,9 @@ class SoundManager {
     const gain = this.ctx.createGain();
     osc.type = 'sine';
     const now = this.ctx.currentTime;
-    osc.frequency.setValueAtTime(260 + Math.random() * 40, now);
-    osc.frequency.exponentialRampToValueAtTime(540, now + 0.14);
-    gain.gain.setValueAtTime(0.25, now);
+    osc.frequency.setValueAtTime(280 + Math.random() * 30, now);
+    osc.frequency.exponentialRampToValueAtTime(560, now + 0.14);
+    gain.gain.setValueAtTime(0.24, now);
     gain.gain.exponentialRampToValueAtTime(0.01, now + 0.14);
     osc.connect(gain);
     gain.connect(this.ctx.destination);
@@ -98,53 +98,56 @@ class SoundManager {
     osc.stop(now + 0.14);
   }
 
-  playCollect() {
+  playCoin() {
     if (!this.enabled || !this.ctx) return;
     const now = this.ctx.currentTime;
-    [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(freq, now + idx * 0.04);
-      gain.gain.setValueAtTime(0.28, now + idx * 0.04);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.04 + 0.28);
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-      osc.start(now + idx * 0.04);
-      osc.stop(now + idx * 0.04 + 0.28);
-    });
-  }
+    this.comboCount = Math.min(8, this.comboCount + 1);
+    const baseFreq = 880 + this.comboCount * 70;
 
-  playShield() {
-    if (!this.enabled || !this.ctx) return;
-    const now = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(400, now);
-    osc.frequency.linearRampToValueAtTime(800, now + 0.3);
+    osc.frequency.setValueAtTime(baseFreq, now);
+    osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.5, now + 0.12);
     gain.gain.setValueAtTime(0.3, now);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
     osc.connect(gain);
     gain.connect(this.ctx.destination);
     osc.start(now);
-    osc.stop(now + 0.35);
+    osc.stop(now + 0.18);
   }
 
-  playWrong() {
+  playGem() {
+    if (!this.enabled || !this.ctx) return;
+    const now = this.ctx.currentTime;
+    [1046.50, 1318.51, 1567.98].forEach((freq, idx) => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, now + idx * 0.05);
+      gain.gain.setValueAtTime(0.3, now + idx * 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.05 + 0.25);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now + idx * 0.05);
+      osc.stop(now + idx * 0.05 + 0.25);
+    });
+  }
+
+  playPowerup() {
     if (!this.enabled || !this.ctx) return;
     const now = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(140, now);
-    osc.frequency.linearRampToValueAtTime(70, now + 0.25);
-    gain.gain.setValueAtTime(0.35, now);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+    osc.frequency.setValueAtTime(350, now);
+    osc.frequency.exponentialRampToValueAtTime(950, now + 0.3);
+    gain.gain.setValueAtTime(0.25, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.32);
     osc.connect(gain);
     gain.connect(this.ctx.destination);
     osc.start(now);
-    osc.stop(now + 0.25);
+    osc.stop(now + 0.32);
   }
 
   playCrash() {
@@ -174,57 +177,38 @@ class SoundManager {
   playLevelUp() {
     if (!this.enabled || !this.ctx) return;
     const now = this.ctx.currentTime;
-    const notes = [440, 554.37, 659.25, 880, 1108.73];
+    const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51];
     notes.forEach((freq, idx) => {
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, now + idx * 0.07);
-      gain.gain.setValueAtTime(0.32, now + idx * 0.07);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.07 + 0.32);
+      osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+      gain.gain.setValueAtTime(0.35, now + idx * 0.08);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.08 + 0.35);
       osc.connect(gain);
       gain.connect(this.ctx.destination);
-      osc.start(now + idx * 0.07);
-      osc.stop(now + idx * 0.07 + 0.32);
+      osc.start(now + idx * 0.08);
+      osc.stop(now + idx * 0.08 + 0.35);
     });
   }
 }
 
-// --- Word Bank & Infinite Level Generator ---
-const WORD_VAULT = {
-  tier1: ['CAT', 'SUN', 'FLY', 'SKY', 'FOX', 'OWL', 'BEE', 'RUN', 'AIR', 'JOY', 'GEM', 'TOP', 'BAT', 'CUP', 'RED'],
-  tier2: ['BIRD', 'WING', 'STAR', 'BLUE', 'WIND', 'GOLD', 'HERO', 'FAST', 'MOON', 'LUCK', 'PEAK', 'LEAP', 'DAWN', 'ROAR', 'GLOW'],
-  tier3: ['CLOUD', 'MAGIC', 'FLIGHT', 'BRAVE', 'STORM', 'SHINE', 'EAGLE', 'SWIFT', 'LIGHT', 'RIVER', 'CROWN', 'SPARK', 'FLASH', 'SPACE', 'DREAM'],
-  tier4: ['FALCON', 'GALAXY', 'PHOENIX', 'THUNDER', 'LEGEND', 'VICTORY', 'FEATHER', 'HORIZON', 'CRYSTAL', 'DRAGON', 'SHADOW', 'COSMIC']
-};
-
+// --- Level Manager (Procedural Infinite Coin Levels) ---
 class LevelManager {
-  constructor() {
-    this.currentLevel = 1;
-    this.wordsSolved = 0;
-  }
-
-  getWordForLevel(level) {
-    let pool;
-    if (level <= 5) {
-      pool = WORD_VAULT.tier1;
-    } else if (level <= 15) {
-      pool = WORD_VAULT.tier2;
-    } else if (level <= 30) {
-      pool = WORD_VAULT.tier3;
-    } else {
-      pool = WORD_VAULT.tier4;
-    }
-    const idx = (level - 1) % pool.length;
-    return pool[idx];
+  getTargetForLevel(level) {
+    if (level === 1) return 5;
+    if (level === 2) return 8;
+    if (level === 3) return 12;
+    if (level === 4) return 16;
+    if (level === 5) return 20;
+    return 20 + (level - 5) * 4; // Infinite progressive levels
   }
 
   getDifficultyConfig(level) {
-    // Highly balanced progression: friendly start, gradual speed up
     const baseSpeed = 2.0;
-    const speedBoost = Math.min(1.6, (level - 1) * 0.05);
-    const pipeGap = Math.max(160, 205 - Math.min(45, (level - 1) * 1.2));
-    const pipeInterval = Math.max(115, 150 - Math.min(30, (level - 1) * 0.7));
+    const speedBoost = Math.min(1.5, (level - 1) * 0.05);
+    const pipeGap = Math.max(165, 210 - Math.min(45, (level - 1) * 1.5));
+    const pipeInterval = Math.max(115, 155 - Math.min(35, (level - 1) * 0.8));
     return {
       scrollSpeed: baseSpeed + speedBoost,
       pipeGap: pipeGap,
@@ -233,53 +217,39 @@ class LevelManager {
   }
 }
 
-// --- Particle & Floating Text FX Engine ---
+// --- FX Engine (Particles, Sparkles, Floating Text) ---
 class FXEngine {
   constructor() {
     this.particles = [];
     this.floatingTexts = [];
   }
 
-  spawnBurst(x, y, color, count = 16) {
+  spawnCoinSparkle(x, y, color = '#ffd600', count = 14) {
     for (let i = 0; i < count; i++) {
       const angle = Math.random() * Math.PI * 2;
-      const speed = Math.random() * 4 + 1.2;
+      const speed = Math.random() * 3.5 + 1.2;
       this.particles.push({
         x: x,
         y: y,
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
-        radius: Math.random() * 3.5 + 2,
+        radius: Math.random() * 3.5 + 1.8,
         color: color,
         alpha: 1,
         life: 1,
-        decay: Math.random() * 0.03 + 0.02
+        decay: Math.random() * 0.035 + 0.02
       });
     }
   }
 
-  spawnDustTrail(x, y) {
-    this.particles.push({
-      x: x + (Math.random() - 0.5) * 6,
-      y: y + (Math.random() - 0.5) * 6,
-      vx: -(Math.random() * 1.5 + 0.8),
-      vy: (Math.random() - 0.5) * 0.6,
-      radius: Math.random() * 3 + 1.5,
-      color: 'rgba(255, 255, 255, 0.8)',
-      alpha: 0.8,
-      life: 1,
-      decay: 0.04
-    });
-  }
-
   spawnConfetti(width, height) {
     const colors = ['#ffd600', '#ff4081', '#00e676', '#00b0ff', '#ff9100', '#e040fb'];
-    for (let i = 0; i < 75; i++) {
+    for (let i = 0; i < 80; i++) {
       this.particles.push({
         x: Math.random() * width,
         y: -20,
-        vx: (Math.random() - 0.5) * 4,
-        vy: Math.random() * 3 + 2,
+        vx: (Math.random() - 0.5) * 4.5,
+        vy: Math.random() * 3.5 + 2,
         radius: Math.random() * 6 + 4,
         color: colors[Math.floor(Math.random() * colors.length)],
         alpha: 1,
@@ -299,13 +269,12 @@ class FXEngine {
       text: text,
       color: color,
       alpha: 1,
-      vy: -1.4,
+      vy: -1.3,
       scale: 1.2
     });
   }
 
   update() {
-    // Update particles
     for (let i = this.particles.length - 1; i >= 0; i--) {
       const p = this.particles[i];
       p.x += p.vx;
@@ -319,7 +288,6 @@ class FXEngine {
       }
     }
 
-    // Update floating texts
     for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
       const ft = this.floatingTexts[i];
       ft.y += ft.vy;
@@ -333,7 +301,6 @@ class FXEngine {
 
   render(ctx) {
     ctx.save();
-    // Render particles
     for (const p of this.particles) {
       ctx.globalAlpha = Math.max(0, p.alpha);
       ctx.fillStyle = p.color;
@@ -350,7 +317,6 @@ class FXEngine {
       }
     }
 
-    // Render floating texts
     for (const ft of this.floatingTexts) {
       ctx.globalAlpha = Math.max(0, ft.alpha);
       ctx.font = '900 18px "Fredoka One", sans-serif';
@@ -364,8 +330,8 @@ class FXEngine {
   }
 }
 
-// --- Main Game Engine ---
-class FlippyWordGame {
+// --- Main Flippy Coins Engine ---
+class FlippyCoinGame {
   constructor() {
     this.canvas = document.getElementById('game-canvas');
     this.ctx = this.canvas.getContext('2d');
@@ -377,21 +343,25 @@ class FlippyWordGame {
     this.ui = {
       levelDisplay: document.getElementById('level-display'),
       scoreDisplay: document.getElementById('score-display'),
-      wordSlots: document.getElementById('word-slots'),
+      coinCurrent: document.getElementById('coin-current'),
+      coinGoal: document.getElementById('coin-goal'),
+      coinBarFill: document.getElementById('coin-bar-fill'),
       livesDisplay: document.getElementById('lives-display'),
       shieldIndicator: document.getElementById('shield-indicator'),
+      magnetIndicator: document.getElementById('magnet-indicator'),
       screenStart: document.getElementById('screen-start'),
       screenLevelComplete: document.getElementById('screen-level-complete'),
       screenGameOver: document.getElementById('screen-game-over'),
       screenPause: document.getElementById('screen-pause'),
       startHighScore: document.getElementById('start-high-score'),
-      completedWord: document.getElementById('completed-word'),
+      completedCoins: document.getElementById('completed-coins'),
+      starsDisplay: document.getElementById('stars-display'),
       rewardPts: document.getElementById('reward-pts'),
-      streakPts: document.getElementById('streak-pts'),
+      totalCoinsBank: document.getElementById('total-coins-bank'),
       finalScore: document.getElementById('final-score'),
       finalHighScore: document.getElementById('final-high-score'),
       finalLevel: document.getElementById('final-level'),
-      finalWordsCount: document.getElementById('final-words-count'),
+      finalCoinsCount: document.getElementById('final-coins-count'),
       btnPlay: document.getElementById('btn-play'),
       btnPause: document.getElementById('btn-pause'),
       btnResume: document.getElementById('btn-resume'),
@@ -408,22 +378,25 @@ class FlippyWordGame {
     this.state = 'START';
     this.score = 0;
     this.highScore = 0;
+    this.totalCoins = 0;
     this.lives = 3;
-    this.shieldActive = false;
     this.currentLevel = 1;
-    this.targetWord = '';
-    this.letterIndex = 0;
-    this.wordsCompletedInRun = 0;
+    this.coinsInCurrentLevel = 0;
+    this.levelTargetCoins = 5;
 
-    // Bird Properties: Ultra-responsive, buoyant, floaty physics
+    // Powerup Timers
+    this.shieldActive = false;
+    this.magnetTimer = 0; // in seconds
+
+    // Bird Physics (Smooth floaty glide)
     this.bird = {
       x: 75,
       y: 250,
       radius: 19,
       velocity: 0,
-      gravity: 0.16,      // Gentle gravity gives plenty of reaction time
-      jumpForce: -4.2,    // Soft, natural flap
-      maxFallSpeed: 3.6,  // Hard terminal velocity cap prevents plummeting
+      gravity: 0.16,
+      jumpForce: -4.2,
+      maxFallSpeed: 3.6,
       rotation: 0,
       targetRotation: 0,
       wingTimer: 0,
@@ -433,9 +406,8 @@ class FlippyWordGame {
 
     // World Elements
     this.pipes = [];
-    this.letterBubbles = [];
+    this.collectibles = [];
     this.clouds = [];
-    this.hills = [];
     this.groundY = 0;
     this.groundOffset = 0;
     this.hillsOffset = 0;
@@ -452,12 +424,13 @@ class FlippyWordGame {
   }
 
   loadSaveData() {
-    const raw = localStorage.getItem('__FLIPPY_SAVE__');
+    const raw = localStorage.getItem('__FLIPPY_COIN_SAVE__');
     if (raw) {
       const data = AntiCheat.decode(raw);
-      if (data && typeof data.highScore === 'number') {
-        this.highScore = data.highScore;
-        this.ui.startHighScore.textContent = this.highScore;
+      if (data) {
+        this.highScore = data.highScore || 0;
+        this.totalCoins = data.totalCoins || 0;
+        if (this.ui.startHighScore) this.ui.startHighScore.textContent = this.highScore;
       }
     }
   }
@@ -468,9 +441,10 @@ class FlippyWordGame {
     }
     const data = {
       highScore: this.highScore,
+      totalCoins: this.totalCoins,
       timestamp: Date.now()
     };
-    localStorage.setItem('__FLIPPY_SAVE__', AntiCheat.encode(data));
+    localStorage.setItem('__FLIPPY_COIN_SAVE__', AntiCheat.encode(data));
   }
 
   setupResize() {
@@ -498,22 +472,21 @@ class FlippyWordGame {
 
   setupLevel(level) {
     this.currentLevel = level;
-    this.targetWord = this.levelMgr.getWordForLevel(level);
-    this.letterIndex = 0;
-    this.ui.levelDisplay.textContent = this.currentLevel;
+    this.levelTargetCoins = this.levelMgr.getTargetForLevel(level);
+    this.coinsInCurrentLevel = 0;
+    this.magnetTimer = 0;
+    this.sound.comboCount = 0;
 
-    // Reset Word Slots
-    this.ui.wordSlots.innerHTML = '';
-    for (let i = 0; i < this.targetWord.length; i++) {
-      const slot = document.createElement('div');
-      slot.className = 'slot' + (i === 0 ? ' current-target' : '');
-      slot.id = `slot-${i}`;
-      slot.textContent = i === 0 ? this.targetWord[i] : '?';
-      this.ui.wordSlots.appendChild(slot);
-    }
+    this.ui.levelDisplay.textContent = this.currentLevel;
+    this.ui.coinCurrent.textContent = '0';
+    this.ui.coinGoal.textContent = this.levelTargetCoins;
+    this.ui.coinBarFill.style.width = '0%';
+
+    this.updateShieldUI();
+    this.updateMagnetUI();
 
     this.pipes = [];
-    this.letterBubbles = [];
+    this.collectibles = [];
     this.frameCounter = 0;
   }
 
@@ -522,8 +495,7 @@ class FlippyWordGame {
     this.score = 0;
     this.lives = 3;
     this.shieldActive = false;
-    this.updateShieldUI();
-    this.wordsCompletedInRun = 0;
+    this.magnetTimer = 0;
     this.updateLivesDisplay();
     this.ui.scoreDisplay.textContent = '0';
     
@@ -548,7 +520,7 @@ class FlippyWordGame {
     if (this.state === 'PLAYING') {
       this.bird.velocity = this.bird.jumpForce;
       this.sound.playFlap();
-      this.fx.spawnBurst(this.bird.x - 12, this.bird.y + 8, '#ffffff', 6);
+      this.fx.spawnCoinSparkle(this.bird.x - 12, this.bird.y + 8, '#ffffff', 5);
     }
   }
 
@@ -569,6 +541,16 @@ class FlippyWordGame {
         this.ui.shieldIndicator.classList.remove('hidden');
       } else {
         this.ui.shieldIndicator.classList.add('hidden');
+      }
+    }
+  }
+
+  updateMagnetUI() {
+    if (this.ui.magnetIndicator) {
+      if (this.magnetTimer > 0) {
+        this.ui.magnetIndicator.classList.remove('hidden');
+      } else {
+        this.ui.magnetIndicator.classList.add('hidden');
       }
     }
   }
@@ -646,7 +628,7 @@ class FlippyWordGame {
     });
   }
 
-  spawnPipesAndLetters() {
+  spawnPipesAndCoins() {
     const diff = this.levelMgr.getDifficultyConfig(this.currentLevel);
     const minHeight = 65;
     const maxHeight = this.groundY - diff.pipeGap - minHeight;
@@ -654,7 +636,7 @@ class FlippyWordGame {
     const bottomY = topHeight + diff.pipeGap;
     const bottomHeight = this.groundY - bottomY;
 
-    // Add Pipe Pair
+    // Add Pipe Obstacles
     const pipeX = this.canvas.width + 40;
     this.pipes.push({
       x: pipeX,
@@ -665,126 +647,135 @@ class FlippyWordGame {
       passed: false
     });
 
-    // 10% chance to spawn a Shield Powerup if not active
-    if (!this.shieldActive && Math.random() < 0.12) {
-      this.letterBubbles.push({
-        x: pipeX + 115,
-        y: topHeight + diff.pipeGap / 2,
-        char: '🛡️',
-        isPowerup: true,
-        powerType: 'SHIELD',
-        radius: 20,
-        floatOffset: Math.random() * Math.PI * 2,
+    const gapCenterY = topHeight + diff.pipeGap / 2;
+
+    // Decide what item to spawn in this section
+    const roll = Math.random();
+
+    // 10% chance for Shield if not active
+    if (!this.shieldActive && roll < 0.10) {
+      this.collectibles.push({
+        x: pipeX + 110,
+        y: gapCenterY,
+        type: 'SHIELD',
+        radius: 18,
+        spinTimer: 0,
         collected: false
       });
       return;
     }
 
-    // Spawn Letter Bubble
-    const targetLetter = this.targetWord[this.letterIndex];
-    const isTarget = Math.random() < 0.70; // 70% chance of target letter
-    let charToSpawn = targetLetter;
-    if (!isTarget) {
-      const alpha = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-      do {
-        charToSpawn = alpha[Math.floor(Math.random() * alpha.length)];
-      } while (charToSpawn === targetLetter);
-    }
-
-    const bubbleY = topHeight + diff.pipeGap / 2 + (Math.random() - 0.5) * 32;
-    this.letterBubbles.push({
-      x: pipeX + 115,
-      y: bubbleY,
-      char: charToSpawn,
-      isTarget: charToSpawn === targetLetter,
-      isPowerup: false,
-      radius: 20,
-      floatOffset: Math.random() * Math.PI * 2,
-      collected: false
-    });
-  }
-
-  onLetterCollected(bubble) {
-    bubble.collected = true;
-
-    // Handle Shield Powerup
-    if (bubble.isPowerup && bubble.powerType === 'SHIELD') {
-      this.sound.playShield();
-      this.shieldActive = true;
-      this.updateShieldUI();
-      this.fx.spawnBurst(bubble.x, bubble.y, '#00e5ff', 30);
-      this.fx.addFloatingText(bubble.x, bubble.y - 15, 'SHIELD ACTIVATED! 🛡️', '#00e5ff');
+    // 12% chance for Magnet if not active
+    if (this.magnetTimer <= 0 && roll < 0.22) {
+      this.collectibles.push({
+        x: pipeX + 110,
+        y: gapCenterY,
+        type: 'MAGNET',
+        radius: 18,
+        spinTimer: 0,
+        collected: false
+      });
       return;
     }
 
-    const neededLetter = this.targetWord[this.letterIndex];
+    // 15% chance for Ruby Gem (worth 3 coins)
+    if (roll < 0.37 && this.currentLevel >= 2) {
+      this.collectibles.push({
+        x: pipeX + 110,
+        y: gapCenterY,
+        type: 'GEM',
+        radius: 17,
+        spinTimer: 0,
+        collected: false
+      });
+      return;
+    }
 
-    if (bubble.char === neededLetter) {
-      // Correct Letter!
-      this.sound.playCollect();
-      this.score += 150;
-      this.ui.scoreDisplay.textContent = this.score;
-      this.fx.spawnBurst(bubble.x, bubble.y, '#ffd600', 30);
-      this.fx.addFloatingText(bubble.x, bubble.y - 15, `+150! [${neededLetter}]`, '#ffd600');
+    // Default: Spawn Gold Coins (single or twin coin pack)
+    this.collectibles.push({
+      x: pipeX + 100,
+      y: gapCenterY,
+      type: 'COIN',
+      radius: 16,
+      spinTimer: Math.random() * Math.PI,
+      collected: false
+    });
 
-      // Update Slot in HUD
-      const slot = document.getElementById(`slot-${this.letterIndex}`);
-      if (slot) {
-        slot.textContent = neededLetter;
-        slot.classList.remove('current-target');
-        slot.classList.add('filled');
-      }
+    // 40% chance of a second coin right behind it
+    if (Math.random() < 0.40) {
+      this.collectibles.push({
+        x: pipeX + 140,
+        y: gapCenterY + (Math.random() - 0.5) * 30,
+        type: 'COIN',
+        radius: 16,
+        spinTimer: Math.random() * Math.PI,
+        collected: false
+      });
+    }
+  }
 
-      this.letterIndex++;
+  onCollectibleCollected(item) {
+    item.collected = true;
 
-      // Check if Word Completed!
-      if (this.letterIndex >= this.targetWord.length) {
-        this.triggerLevelComplete();
-      } else {
-        const nextSlot = document.getElementById(`slot-${this.letterIndex}`);
-        if (nextSlot) {
-          nextSlot.textContent = this.targetWord[this.letterIndex];
-          nextSlot.classList.add('current-target');
-        }
-      }
-    } else {
-      // Wrong Letter! Check if Shield protects
-      if (this.shieldActive) {
-        this.sound.playCrash();
-        this.shieldActive = false;
-        this.updateShieldUI();
-        this.fx.spawnBurst(this.bird.x, this.bird.y, '#00e5ff', 25);
-        this.fx.addFloatingText(this.bird.x, this.bird.y - 20, 'SHIELD BROKEN!', '#00e5ff');
-      } else {
-        this.sound.playWrong();
-        this.screenShake = 12;
-        this.lives--;
-        this.updateLivesDisplay();
-        this.fx.spawnBurst(bubble.x, bubble.y, '#f44336', 22);
-        this.fx.addFloatingText(bubble.x, bubble.y - 15, '-1 LIFE! ❌', '#f44336');
+    if (item.type === 'COIN') {
+      this.sound.playCoin();
+      this.coinsInCurrentLevel++;
+      this.totalCoins++;
+      this.score += 100;
+      this.fx.spawnCoinSparkle(item.x, item.y, '#ffd600', 18);
+      this.fx.addFloatingText(item.x, item.y - 15, '+1 🪙', '#ffd600');
+    } else if (item.type === 'GEM') {
+      this.sound.playGem();
+      this.coinsInCurrentLevel += 3;
+      this.totalCoins += 3;
+      this.score += 350;
+      this.fx.spawnCoinSparkle(item.x, item.y, '#ff1744', 24);
+      this.fx.addFloatingText(item.x, item.y - 15, '+3 💎', '#ff4081');
+    } else if (item.type === 'SHIELD') {
+      this.sound.playPowerup();
+      this.shieldActive = true;
+      this.updateShieldUI();
+      this.fx.spawnCoinSparkle(item.x, item.y, '#00e5ff', 25);
+      this.fx.addFloatingText(item.x, item.y - 15, 'SHIELD ACTIVE! 🛡️', '#00e5ff');
+    } else if (item.type === 'MAGNET') {
+      this.sound.playPowerup();
+      this.magnetTimer = 8; // 8 seconds of coin magnet
+      this.updateMagnetUI();
+      this.fx.spawnCoinSparkle(item.x, item.y, '#e91e63', 25);
+      this.fx.addFloatingText(item.x, item.y - 15, 'COIN MAGNET! 🧲', '#ff4081');
+    }
 
-        if (this.lives <= 0) {
-          this.triggerGameOver('Wrong Letter Crashed!');
-        }
-      }
+    // Update HUD
+    this.ui.scoreDisplay.textContent = this.score;
+    this.ui.coinCurrent.textContent = Math.min(this.coinsInCurrentLevel, this.levelTargetCoins);
+    const progressPercent = Math.min(100, (this.coinsInCurrentLevel / this.levelTargetCoins) * 100);
+    this.ui.coinBarFill.style.width = progressPercent + '%';
+
+    // Check Level Complete!
+    if (this.coinsInCurrentLevel >= this.levelTargetCoins) {
+      this.triggerLevelComplete();
     }
   }
 
   triggerLevelComplete() {
     this.sound.playLevelUp();
     this.state = 'LEVEL_COMPLETE';
-    this.wordsCompletedInRun++;
-    const reward = 500 + this.currentLevel * 50;
-    const streak = this.wordsCompletedInRun * 100;
-    this.score += reward + streak;
+    const reward = 500 + this.currentLevel * 100;
+    this.score += reward;
     this.ui.scoreDisplay.textContent = this.score;
     this.saveGameData();
 
     this.fx.spawnConfetti(this.canvas.width, this.canvas.height);
 
-    this.ui.completedWord.textContent = this.targetWord;
+    // Calculate Stars based on lives remaining
+    let starsStr = '⭐⭐⭐';
+    if (this.lives === 2) starsStr = '⭐⭐';
+    if (this.lives <= 1) starsStr = '⭐';
+
+    this.ui.starsDisplay.textContent = starsStr;
+    this.ui.completedCoins.textContent = `🪙 ${this.coinsInCurrentLevel} / ${this.levelTargetCoins}`;
     this.ui.rewardPts.textContent = reward;
-    this.ui.streakPts.textContent = streak;
+    this.ui.totalCoinsBank.textContent = this.totalCoins;
     this.setScreen('LEVEL_COMPLETE');
   }
 
@@ -797,7 +788,7 @@ class FlippyWordGame {
     this.ui.finalScore.textContent = this.score;
     this.ui.finalHighScore.textContent = this.highScore;
     this.ui.finalLevel.textContent = this.currentLevel;
-    this.ui.finalWordsCount.textContent = this.wordsCompletedInRun;
+    this.ui.finalCoinsCount.textContent = this.totalCoins;
     this.setScreen('GAMEOVER');
   }
 
@@ -816,21 +807,29 @@ class FlippyWordGame {
 
     if (this.state !== 'PLAYING') return;
 
+    // Update Magnet Timer
+    if (this.magnetTimer > 0) {
+      this.magnetTimer -= dt;
+      if (this.magnetTimer <= 0) {
+        this.magnetTimer = 0;
+        this.updateMagnetUI();
+      }
+    }
+
     const diff = this.levelMgr.getDifficultyConfig(this.currentLevel);
 
-    // Bird Physics (Smooth, floaty glide)
+    // Bird Physics (Smooth float & terminal velocity cap)
     this.bird.velocity += this.bird.gravity;
     if (this.bird.velocity > this.bird.maxFallSpeed) {
       this.bird.velocity = this.bird.maxFallSpeed;
     }
     this.bird.y += this.bird.velocity;
 
-    // Smooth Lerp Rotation
     this.bird.targetRotation = Math.min(Math.PI / 4, Math.max(-Math.PI / 5, (this.bird.velocity * 3.2) * Math.PI / 180));
     this.bird.rotation += (this.bird.targetRotation - this.bird.rotation) * 0.15;
     this.bird.wingTimer += 0.22;
 
-    // Blinking animation logic
+    // Blinking animation
     this.bird.blinkTimer += dt;
     if (this.bird.blinkTimer > 3.5) {
       this.bird.isBlinking = true;
@@ -840,18 +839,13 @@ class FlippyWordGame {
       }
     }
 
-    // Spawn tiny dust sparkles behind bird
-    if (this.frameCounter % 6 === 0) {
-      this.fx.spawnDustTrail(this.bird.x - 14, this.bird.y);
-    }
-
     // Ground & Ceiling Collisions
     if (this.bird.y + this.bird.radius >= this.groundY) {
       this.bird.y = this.groundY - this.bird.radius;
       if (this.shieldActive) {
         this.shieldActive = false;
         this.updateShieldUI();
-        this.bird.velocity = -4.5; // Bounce off ground
+        this.bird.velocity = -4.5;
         this.fx.addFloatingText(this.bird.x, this.bird.y - 20, 'SHIELD SAVED YOU! 🛡️', '#00e5ff');
       } else {
         this.triggerGameOver('Ground Hit');
@@ -863,10 +857,10 @@ class FlippyWordGame {
       this.bird.velocity = 0;
     }
 
-    // Spawn Obstacles
+    // Spawn Pipes & Collectibles
     this.frameCounter++;
     if (this.frameCounter % diff.pipeInterval === 0) {
-      this.spawnPipesAndLetters();
+      this.spawnPipesAndCoins();
     }
 
     // Update Pipes
@@ -874,14 +868,13 @@ class FlippyWordGame {
       const p = this.pipes[i];
       p.x -= diff.scrollSpeed;
 
-      // Pipe clearance points
       if (!p.passed && p.x + p.width < this.bird.x) {
         p.passed = true;
-        this.score += 10;
+        this.score += 15;
         this.ui.scoreDisplay.textContent = this.score;
       }
 
-      // Check Bird-Pipe Collision
+      // Bird-Pipe Collision
       const bLeft = this.bird.x - this.bird.radius + 3;
       const bRight = this.bird.x + this.bird.radius - 3;
       const bTop = this.bird.y - this.bird.radius + 3;
@@ -893,9 +886,9 @@ class FlippyWordGame {
             this.sound.playCrash();
             this.shieldActive = false;
             this.updateShieldUI();
-            this.fx.spawnBurst(this.bird.x, this.bird.y, '#00e5ff', 30);
+            this.fx.spawnCoinSparkle(this.bird.x, this.bird.y, '#00e5ff', 30);
             this.fx.addFloatingText(this.bird.x, this.bird.y - 20, 'SHIELD BROKEN!', '#00e5ff');
-            p.passed = true; // allow pass
+            p.passed = true;
           } else {
             this.triggerGameOver('Pipe Crash');
             return;
@@ -908,29 +901,40 @@ class FlippyWordGame {
       }
     }
 
-    // Update Letter Bubbles
-    for (let i = this.letterBubbles.length - 1; i >= 0; i--) {
-      const b = this.letterBubbles[i];
-      b.x -= diff.scrollSpeed;
-      b.floatOffset += 0.05;
-      const curY = b.y + Math.sin(b.floatOffset) * 8;
+    // Update Collectibles (Coins, Gems, Powerups)
+    for (let i = this.collectibles.length - 1; i >= 0; i--) {
+      const item = this.collectibles[i];
+      item.x -= diff.scrollSpeed;
+      item.spinTimer += 0.08;
 
-      if (!b.collected) {
-        const dx = this.bird.x - b.x;
-        const dy = this.bird.y - curY;
+      // Magnet Pull Physics
+      if (this.magnetTimer > 0 && (item.type === 'COIN' || item.type === 'GEM')) {
+        const dx = this.bird.x - item.x;
+        const dy = this.bird.y - item.y;
         const dist = Math.hypot(dx, dy);
 
-        if (dist < this.bird.radius + b.radius) {
-          this.onLetterCollected(b);
+        if (dist < 190) {
+          // Accelerate coin towards the bird!
+          item.x += (dx / dist) * 6.5;
+          item.y += (dy / dist) * 6.5;
         }
       }
 
-      if (b.x < -50 || b.collected) {
-        this.letterBubbles.splice(i, 1);
+      if (!item.collected) {
+        const dx = this.bird.x - item.x;
+        const dy = this.bird.y - item.y;
+        const dist = Math.hypot(dx, dy);
+
+        if (dist < this.bird.radius + item.radius) {
+          this.onCollectibleCollected(item);
+        }
+      }
+
+      if (item.x < -40 || item.collected) {
+        this.collectibles.splice(i, 1);
       }
     }
 
-    // Scroll parallax ground & hills
     this.groundOffset = (this.groundOffset + diff.scrollSpeed) % 24;
     this.hillsOffset = (this.hillsOffset + diff.scrollSpeed * 0.45) % 200;
 
@@ -953,7 +957,7 @@ class FlippyWordGame {
     this.drawClouds();
     this.drawRollingHills();
     this.drawPipes();
-    this.drawLetterBubbles();
+    this.drawCollectibles();
     this.drawGround();
     this.drawBird();
     this.fx.render(this.ctx);
@@ -967,7 +971,7 @@ class FlippyWordGame {
     const grad = this.ctx.createLinearGradient(0, 0, 0, h);
     if (this.currentLevel % 3 === 1) {
       grad.addColorStop(0, '#2193b0');
-      grad.addColorStop(1, '#6dd5ed');
+      grad.addColorStop(1, '#6dd5ed'); // Crisp Cyan Sky
     } else if (this.currentLevel % 3 === 2) {
       grad.addColorStop(0, '#ff7e5f');
       grad.addColorStop(1, '#feb47b'); // Sunset
@@ -1034,7 +1038,6 @@ class FlippyWordGame {
   }
 
   drawPipeSection(x, y, w, h, isTop) {
-    // Elegant arcade pipe gradient with drop shadow
     const grad = this.ctx.createLinearGradient(x, 0, x + w, 0);
     grad.addColorStop(0, '#388e3c');
     grad.addColorStop(0.3, '#66bb6a');
@@ -1044,11 +1047,11 @@ class FlippyWordGame {
     this.ctx.fillStyle = grad;
     this.ctx.fillRect(x, y, w, h);
 
-    // Specular highlight line
+    // Specular highlight
     this.ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
     this.ctx.fillRect(x + 5, y, 4, h);
 
-    // Lip Collar
+    // Pipe Cap
     const capHeight = 22;
     const capExtra = 5;
     const capX = x - capExtra;
@@ -1062,91 +1065,82 @@ class FlippyWordGame {
     this.ctx.strokeRect(capX, capY, capW, capHeight);
   }
 
-  drawLetterBubbles() {
-    for (const b of this.letterBubbles) {
-      const curY = b.y + Math.sin(b.floatOffset) * 8;
+  drawCollectibles() {
+    for (const item of this.collectibles) {
       this.ctx.save();
-      this.ctx.translate(b.x, curY);
+      this.ctx.translate(item.x, item.y);
 
-      if (b.isPowerup) {
-        // Shield Bubble (Glowing Cyan)
+      if (item.type === 'COIN') {
+        // 3D Spinning Golden Coin
+        const scaleX = Math.abs(Math.cos(item.spinTimer));
+        this.ctx.scale(scaleX, 1);
+
+        // Outer Glow
         this.ctx.beginPath();
-        this.ctx.arc(0, 0, b.radius + 6, 0, Math.PI * 2);
-        this.ctx.fillStyle = 'rgba(0, 229, 255, 0.45)';
+        this.ctx.arc(0, 0, item.radius + 4, 0, Math.PI * 2);
+        this.ctx.fillStyle = 'rgba(255, 214, 0, 0.4)';
         this.ctx.fill();
 
+        // Coin Outer Rim
+        const rimGrad = this.ctx.createLinearGradient(-item.radius, -item.radius, item.radius, item.radius);
+        rimGrad.addColorStop(0, '#fff59d');
+        rimGrad.addColorStop(0.5, '#ffd600');
+        rimGrad.addColorStop(1, '#ff8f00');
+
+        this.ctx.fillStyle = rimGrad;
         this.ctx.beginPath();
-        this.ctx.arc(0, 0, b.radius, 0, Math.PI * 2);
-        this.ctx.fillStyle = 'rgba(0, 188, 212, 0.9)';
+        this.ctx.arc(0, 0, item.radius, 0, Math.PI * 2);
         this.ctx.fill();
-        this.ctx.strokeStyle = '#ffffff';
-        this.ctx.lineWidth = 2.5;
+
+        // Inner Embossed Ring
+        this.ctx.strokeStyle = '#f57f17';
+        this.ctx.lineWidth = 2;
+        this.ctx.beginPath();
+        this.ctx.arc(0, 0, item.radius * 0.65, 0, Math.PI * 2);
         this.ctx.stroke();
+
+        // Center Star / Symbol
+        this.ctx.fillStyle = '#fff9c4';
+        this.ctx.font = '900 13px "Fredoka One", sans-serif';
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        this.ctx.fillText('★', 0, 0.5);
+
+      } else if (item.type === 'GEM') {
+        // Sparkling Ruby Gem
+        this.ctx.rotate(item.spinTimer * 0.5);
+        this.ctx.beginPath();
+        this.ctx.arc(0, 0, item.radius + 5, 0, Math.PI * 2);
+        this.ctx.fillStyle = 'rgba(255, 64, 129, 0.45)';
+        this.ctx.fill();
+
+        this.ctx.font = '22px sans-serif';
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        this.ctx.fillText('💎', 0, 1);
+
+      } else if (item.type === 'SHIELD') {
+        this.ctx.beginPath();
+        this.ctx.arc(0, 0, item.radius + 6, 0, Math.PI * 2);
+        this.ctx.fillStyle = 'rgba(0, 229, 255, 0.5)';
+        this.ctx.fill();
 
         this.ctx.font = '20px sans-serif';
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
-        this.ctx.fillText(b.char, 0, 1);
-        this.ctx.restore();
-        continue;
-      }
+        this.ctx.fillText('🛡️', 0, 1);
 
-      // Outer Aura for Target Letter
-      if (b.isTarget) {
-        // Pulsating Star Halo
+      } else if (item.type === 'MAGNET') {
         this.ctx.beginPath();
-        this.ctx.arc(0, 0, b.radius + 8, 0, Math.PI * 2);
-        this.ctx.fillStyle = 'rgba(255, 215, 0, 0.55)';
+        this.ctx.arc(0, 0, item.radius + 6, 0, Math.PI * 2);
+        this.ctx.fillStyle = 'rgba(233, 30, 99, 0.5)';
         this.ctx.fill();
 
-        // 4-point golden star sparkle
-        this.ctx.save();
-        this.ctx.rotate(b.floatOffset * 1.5);
-        this.ctx.fillStyle = '#fff9c4';
-        for (let s = 0; s < 4; s++) {
-          this.ctx.rotate(Math.PI / 2);
-          this.ctx.beginPath();
-          this.ctx.moveTo(0, -b.radius - 8);
-          this.ctx.lineTo(3, -b.radius - 2);
-          this.ctx.lineTo(0, -b.radius);
-          this.ctx.lineTo(-3, -b.radius - 2);
-          this.ctx.closePath();
-          this.ctx.fill();
-        }
-        this.ctx.restore();
-      } else {
-        this.ctx.beginPath();
-        this.ctx.arc(0, 0, b.radius + 4, 0, Math.PI * 2);
-        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-        this.ctx.fill();
+        this.ctx.font = '20px sans-serif';
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        this.ctx.fillText('🧲', 0, 1);
       }
-
-      // Bubble Body
-      const bGrad = this.ctx.createRadialGradient(-4, -4, 2, 0, 0, b.radius);
-      if (b.isTarget) {
-        bGrad.addColorStop(0, '#fffde7');
-        bGrad.addColorStop(0.7, '#ffd600');
-        bGrad.addColorStop(1, '#ffab00');
-      } else {
-        bGrad.addColorStop(0, '#ffffff');
-        bGrad.addColorStop(0.8, '#b3e5fc');
-        bGrad.addColorStop(1, '#81d4fa');
-      }
-      this.ctx.fillStyle = bGrad;
-      this.ctx.beginPath();
-      this.ctx.arc(0, 0, b.radius, 0, Math.PI * 2);
-      this.ctx.fill();
-
-      this.ctx.strokeStyle = '#ffffff';
-      this.ctx.lineWidth = 2.5;
-      this.ctx.stroke();
-
-      // Letter text
-      this.ctx.fillStyle = '#212121';
-      this.ctx.font = '900 20px "Fredoka One", sans-serif';
-      this.ctx.textAlign = 'center';
-      this.ctx.textBaseline = 'middle';
-      this.ctx.fillText(b.char, 0, 1.5);
 
       this.ctx.restore();
     }
@@ -1156,15 +1150,12 @@ class FlippyWordGame {
     const w = this.canvas.width;
     const h = this.canvas.height - this.groundY;
 
-    // Grass strip
     this.ctx.fillStyle = '#4caf50';
     this.ctx.fillRect(0, this.groundY, w, 14);
 
-    // Dirt soil
     this.ctx.fillStyle = '#795548';
     this.ctx.fillRect(0, this.groundY + 14, w, h - 14);
 
-    // Moving ground stripes
     this.ctx.strokeStyle = '#4e342e';
     this.ctx.lineWidth = 3;
     for (let x = -this.groundOffset; x < w + 30; x += 22) {
@@ -1180,7 +1171,7 @@ class FlippyWordGame {
     this.ctx.translate(this.bird.x, this.bird.y);
     this.ctx.rotate(this.bird.rotation);
 
-    // Translucent Shield Forcefield Bubble
+    // Shield Forcefield Bubble
     if (this.shieldActive) {
       this.ctx.beginPath();
       this.ctx.arc(0, 0, this.bird.radius + 12, 0, Math.PI * 2);
@@ -1191,13 +1182,24 @@ class FlippyWordGame {
       this.ctx.stroke();
     }
 
-    // Cute Tail Feathers
+    // Magnet Magnetic Ring
+    if (this.magnetTimer > 0) {
+      this.ctx.beginPath();
+      this.ctx.arc(0, 0, this.bird.radius + 16, 0, Math.PI * 2);
+      this.ctx.strokeStyle = 'rgba(233, 30, 99, 0.7)';
+      this.ctx.lineWidth = 2;
+      this.ctx.setLineDash([4, 4]);
+      this.ctx.stroke();
+      this.ctx.setLineDash([]);
+    }
+
+    // Tail Feathers
     this.ctx.fillStyle = '#f57c00';
     this.ctx.beginPath();
     this.ctx.ellipse(-this.bird.radius + 2, 2, 8, 4, -0.3, 0, Math.PI * 2);
     this.ctx.fill();
 
-    // Bird Body (Soft golden yellow gradient)
+    // Bird Body
     const bodyGrad = this.ctx.createRadialGradient(-4, -4, 4, 0, 0, this.bird.radius);
     bodyGrad.addColorStop(0, '#fff59d');
     bodyGrad.addColorStop(0.75, '#ffca28');
@@ -1211,19 +1213,19 @@ class FlippyWordGame {
     this.ctx.lineWidth = 2;
     this.ctx.stroke();
 
-    // Cute Rosy Pink Cheek
+    // Rosy Pink Cheek
     this.ctx.fillStyle = 'rgba(255, 64, 129, 0.45)';
     this.ctx.beginPath();
     this.ctx.arc(3, 4, 4.5, 0, Math.PI * 2);
     this.ctx.fill();
 
-    // Crest Feather on Head
+    // Crest Feather
     this.ctx.fillStyle = '#ff9800';
     this.ctx.beginPath();
     this.ctx.arc(-2, -this.bird.radius, 4, 0, Math.PI * 2);
     this.ctx.fill();
 
-    // Wing with smooth flap animation
+    // Wing
     const wingFlapY = Math.sin(this.bird.wingTimer) * 5;
     this.ctx.fillStyle = '#fff9c4';
     this.ctx.beginPath();
@@ -1233,27 +1235,24 @@ class FlippyWordGame {
     this.ctx.lineWidth = 1.8;
     this.ctx.stroke();
 
-    // Cartoon Eye with Highlight & Blinking
+    // Eye
     this.ctx.fillStyle = '#ffffff';
     this.ctx.beginPath();
     this.ctx.arc(8, -5, 6, 0, Math.PI * 2);
     this.ctx.fill();
 
     if (this.bird.isBlinking) {
-      // Closed Eye Line
       this.ctx.strokeStyle = '#212121';
       this.ctx.lineWidth = 2;
       this.ctx.beginPath();
       this.ctx.arc(8, -5, 4, 0.1, Math.PI - 0.1);
       this.ctx.stroke();
     } else {
-      // Big Pupil
       this.ctx.fillStyle = '#212121';
       this.ctx.beginPath();
       this.ctx.arc(9.5, -5, 3, 0, Math.PI * 2);
       this.ctx.fill();
 
-      // Catchlight Sparkle in Eye
       this.ctx.fillStyle = '#ffffff';
       this.ctx.beginPath();
       this.ctx.arc(10.5, -6.5, 1.2, 0, Math.PI * 2);
@@ -1288,5 +1287,5 @@ class FlippyWordGame {
 
 // Start Game instance on DOM load
 window.addEventListener('DOMContentLoaded', () => {
-  window.flippyGame = new FlippyWordGame();
+  window.flippyGame = new FlippyCoinGame();
 });

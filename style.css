@@ -149,62 +149,64 @@ body {
   transform: scale(0.9);
 }
 
-/* Word Target Area in HUD Center */
-#word-target-container {
+/* Coin Target Area in HUD Center */
+#coin-target-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   pointer-events: auto;
+  min-width: 140px;
 }
 
-.target-title {
-  font-size: 10px;
-  font-weight: 900;
-  color: #ffffff;
-  letter-spacing: 1px;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
-  margin-bottom: 3px;
-}
-
-.word-slots {
+.coin-progress-wrapper {
   display: flex;
-  gap: 6px;
-}
-
-.slot {
-  width: 34px;
-  height: 38px;
-  background: var(--slot-bg);
-  backdrop-filter: blur(6px);
-  border: 2px solid var(--slot-border);
-  border-radius: 8px;
-  display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  gap: 3px;
+  width: 100%;
+}
+
+.coin-counter {
   font-family: 'Fredoka One', cursive;
-  font-size: 20px;
-  color: #ffffff;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  font-size: 15px;
+  color: #ffd600;
+  text-shadow: 0 2px 5px rgba(0,0,0,0.6);
+  letter-spacing: 0.5px;
 }
 
-.slot.filled {
-  background: var(--slot-filled-bg);
-  border-color: #81c784;
-  transform: scale(1.05);
-  box-shadow: 0 0 12px rgba(76, 175, 80, 0.8);
+.coin-bar-bg {
+  width: 120px;
+  height: 8px;
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  overflow: hidden;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
 }
 
-.slot.current-target {
-  background: var(--slot-current-bg);
-  border-color: #ffe082;
-  animation: slotPulse 1s infinite alternate;
+.coin-bar-fill {
+  width: 0%;
+  height: 100%;
+  background: linear-gradient(90deg, #ffd600, #ff9100);
+  border-radius: 10px;
+  box-shadow: 0 0 8px rgba(255, 214, 0, 0.8);
+  transition: width 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-@keyframes slotPulse {
-  0% { transform: scale(1); box-shadow: 0 0 4px #ff9800; }
-  100% { transform: scale(1.1); box-shadow: 0 0 14px #ffd600; }
+.magnet-badge {
+  background: rgba(233, 30, 99, 0.5);
+  border-color: #ff4081;
+  box-shadow: 0 0 10px rgba(255, 64, 129, 0.6);
+  animation: magnetPulse 1.2s infinite alternate;
+}
+
+.magnet-badge.hidden {
+  display: none;
+}
+
+@keyframes magnetPulse {
+  0% { transform: scale(0.95); }
+  100% { transform: scale(1.08); }
 }
 
 /* Overlay Screen Styles */

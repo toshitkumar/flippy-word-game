@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Flippy Word - Infinite Arcade Word Flight</title>
+  <title>Flippy Coins - Infinite Arcade Coin Quest</title>
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,16 +23,22 @@
           <span class="heart active">❤️</span>
           <span class="heart active">❤️</span>
         </div>
-        <div id="shield-indicator" class="badge shield-badge hidden">
+        <div id="shield-indicator" class="badge shield-badge hidden" title="Shield Active">
           <span>🛡️</span>
+        </div>
+        <div id="magnet-indicator" class="badge magnet-badge hidden" title="Magnet Active">
+          <span>🧲</span>
         </div>
       </div>
 
-      <!-- Target Word Display Area -->
-      <div id="word-target-container">
-        <div class="target-title">SPELL THIS WORD:</div>
-        <div id="word-slots" class="word-slots">
-          <!-- Filled dynamically e.g. [B] [I] [R] [D] -->
+      <!-- Target Coin Collector Display Area -->
+      <div id="coin-target-container">
+        <div class="target-title">LEVEL TARGET:</div>
+        <div class="coin-progress-wrapper">
+          <div class="coin-counter">🪙 <span id="coin-current">0</span> / <span id="coin-goal">5</span></div>
+          <div class="coin-bar-bg">
+            <div id="coin-bar-fill" class="coin-bar-fill"></div>
+          </div>
         </div>
       </div>
 
@@ -52,10 +58,10 @@
     <div id="screen-start" class="screen-overlay active">
       <div class="card-modal">
         <div class="logo-box">
-          <div class="mascot-float">🪶</div>
-          <h1 class="game-title">FLIPPY<br><span class="accent">WORDS</span></h1>
+          <div class="mascot-float">🪙</div>
+          <h1 class="game-title">FLIPPY<br><span class="accent">COINS</span></h1>
         </div>
-        <p class="tagline">Flap. Dodge. Spell!</p>
+        <p class="tagline">Flap. Dodge. Collect Coins!</p>
 
         <div class="instructions-card">
           <div class="inst-item">
@@ -63,16 +69,16 @@
             <span><b>Tap / Space</b> to Flap & Fly</span>
           </div>
           <div class="inst-item">
-            <span class="inst-icon">🔤</span>
-            <span>Collect glowing <b>letters in order</b></span>
+            <span class="inst-icon">🪙</span>
+            <span>Collect target <b>coins to clear levels</b></span>
           </div>
           <div class="inst-item">
-            <span class="inst-icon">⚠️</span>
-            <span>Dodge <b>pipes</b> & <b>wrong letters</b>!</span>
+            <span class="inst-icon">🧲</span>
+            <span>Grab <b>Magnets & Shields</b> to survive!</span>
           </div>
         </div>
 
-        <button id="btn-play" class="btn-primary pulse">TAP TO FLY</button>
+        <button id="btn-play" class="btn-primary pulse">PLAY LEVEL 1</button>
         <button id="btn-open-buy" class="btn-secondary buy-btn" style="margin-top: 10px; background: linear-gradient(135deg, #ffd600, #ff9100); color: #212121; font-weight: 900;">⭐ GET FULL GAME - ₹49</button>
         <div class="high-score-label">BEST SCORE: <span id="start-high-score">0</span></div>
       </div>
@@ -81,15 +87,16 @@
     <!-- Overlay: Level Complete Screen -->
     <div id="screen-level-complete" class="screen-overlay">
       <div class="card-modal celebrate">
-        <div class="confetti-icon">🎉</div>
+        <div class="confetti-icon">🏆</div>
         <h2>LEVEL COMPLETED!</h2>
+        <div class="stars-rating" id="stars-display" style="font-size: 32px; margin: 8px 0; letter-spacing: 4px;">⭐⭐⭐</div>
         <div class="completed-word-box">
-          <span class="sub-label">Word Solved:</span>
-          <div id="completed-word" class="highlight-word">BIRD</div>
+          <span class="sub-label">Coins Collected:</span>
+          <div id="completed-coins" class="highlight-word">🪙 5 / 5</div>
         </div>
         <div class="level-rewards">
-          <div class="reward-item">⭐ +<span id="reward-pts">500</span> Points</div>
-          <div class="reward-item">🔥 Streak Bonus: +<span id="streak-pts">100</span></div>
+          <div class="reward-item">⭐ +<span id="reward-pts">500</span> Pts</div>
+          <div class="reward-item">💰 Bank: <span id="total-coins-bank">5</span></div>
         </div>
         <button id="btn-next-level" class="btn-primary">NEXT LEVEL ➔</button>
       </div>
@@ -115,8 +122,8 @@
             <span id="final-level" class="stat-val">1</span>
           </div>
           <div class="stat-box">
-            <span class="stat-name">WORDS SPELLED</span>
-            <span id="final-words-count" class="stat-val">0</span>
+            <span class="stat-name">COINS COLLECTED</span>
+            <span id="final-coins-count" class="stat-val">0</span>
           </div>
         </div>
 
