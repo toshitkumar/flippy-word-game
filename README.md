@@ -1,25 +1,25 @@
-# 🪶 Flippy Words - Infinite Arcade Word Flight
+# 🪙 Flippy Coins - Endless Arcade Coin Collector
 
-![Flippy Words Banner](https://img.shields.io/badge/Status-Playable%20Live-brightgreen)
+![Flippy Coins Banner](https://img.shields.io/badge/Status-Playable%20Live-brightgreen)
 ![Platform](https://img.shields.io/badge/Platform-Web%20%7C%20Android-blue)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Security](https://img.shields.io/badge/Security-Anti--Lucky%20Patcher-red)
 
-> **Flap. Dodge. Spell!** A high-octane hybrid arcade game combining classic Flappy mechanics with addictive word-spelling puzzles and procedurally generated infinite levels.
+> **Flap. Dodge. Collect Coins!** A high-octane endless arcade flight game where you navigate through pipes, gather shiny gold coins, gems, and power-ups in a seamless single continuous run.
 
 ---
 
 ## 🎮 Play Live in Browser
-👉 **[Play Flippy Words Online](https://toshitkumar.github.io/flippy-word-game/)**
+👉 **[Play Flippy Coins Online](https://toshitkumar.github.io/flippy-word-game/)**
 
 ---
 
 ## ✨ Features
-* 🔤 **Word Spelling Core**: Flap through the sky to collect glowing letter bubbles in sequential order.
-* ♾️ **Infinite Procedural Levels**: 100+ curated vocabulary words across 4 tiers followed by endless procedural challenges.
-* 🛡️ **Shield Power-Ups**: Collect the rare cyan shield bubble for a forcefield that absorbs 1 pipe crash or wrong letter.
-* 🎵 **In-built Web Audio Synth**: Custom synthesized chimes, wing flaps, and procedural retro ambient BGM. Zero external dependencies.
-* 💥 **Juicy Particle Effects**: Star sparkles, confetti celebration, floating score indicators, and dust trails.
+* 🪙 **Endless Coin Collection**: 3D spinning shiny gold coins and rare ruby gems spawned throughout your continuous run.
+* ♾️ **Pure Single Level Flow**: Zero level-complete pauses or interruptions — endless smooth gameplay that dynamically scales difficulty with your score.
+* 🧲 **Coin Magnet & Shield Power-Ups**: Pull all coins towards you and shield against pipe collisions.
+* 🎵 **In-built Web Audio Synth**: Satisfying coin chimes, milestone celebration sounds, and procedural retro background music.
+* 💥 **Juicy Particle Effects**: Sparkles, confetti bursts on coin streaks, floating score markers, and dynamic day/sunset/night sky cycles.
 * 🔒 **Anti-Piracy & Anti-Lucky Patcher**: Armed with runtime signature validation, DEX integrity checksums, and aggressive R8 obfuscation for Google Play Store release.
 
 ---

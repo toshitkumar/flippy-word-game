@@ -14,9 +14,9 @@
     <!-- Top HUD -->
     <header id="hud">
       <div class="hud-left">
-        <div class="badge level-badge">
-          <span class="badge-label">LVL</span>
-          <span id="level-display">1</span>
+        <div class="badge coin-badge">
+          <span class="badge-icon">🪙</span>
+          <span id="coin-current">0</span>
         </div>
         <div class="lives-container" id="lives-display">
           <span class="heart active">❤️</span>
@@ -31,21 +31,17 @@
         </div>
       </div>
 
-      <!-- Target Coin Collector Display Area -->
-      <div id="coin-target-container">
-        <div class="target-title">LEVEL TARGET:</div>
-        <div class="coin-progress-wrapper">
-          <div class="coin-counter">🪙 <span id="coin-current">0</span> / <span id="coin-goal">5</span></div>
-          <div class="coin-bar-bg">
-            <div id="coin-bar-fill" class="coin-bar-fill"></div>
-          </div>
+      <div class="hud-center">
+        <div class="badge score-badge">
+          <span class="badge-label">SCORE</span>
+          <span id="score-display">0</span>
         </div>
       </div>
 
       <div class="hud-right">
-        <div class="badge score-badge">
-          <span class="badge-label">PTS</span>
-          <span id="score-display">0</span>
+        <div class="badge best-badge">
+          <span class="badge-label">BEST</span>
+          <span id="hud-high-score">0</span>
         </div>
         <button id="btn-pause" class="icon-btn" aria-label="Pause">⏸️</button>
       </div>
@@ -59,9 +55,9 @@
       <div class="card-modal">
         <div class="logo-box">
           <div class="mascot-float">🪙</div>
-          <h1 class="game-title">FLIPPY<br><span class="accent">COINS</span></h1>
+          <h1 class="game-title">FLIPPY<br><span class="accent">COIN</span></h1>
         </div>
-        <p class="tagline">Flap. Dodge. Collect Coins!</p>
+        <p class="tagline">Flap. Dodge. Collect Unlimited Coins!</p>
 
         <div class="instructions-card">
           <div class="inst-item">
@@ -70,35 +66,17 @@
           </div>
           <div class="inst-item">
             <span class="inst-icon">🪙</span>
-            <span>Collect target <b>coins to clear levels</b></span>
+            <span>Collect <b>Unlimited Coins & Gems</b></span>
           </div>
           <div class="inst-item">
             <span class="inst-icon">🧲</span>
-            <span>Grab <b>Magnets & Shields</b> to survive!</span>
+            <span>Grab <b>Magnets & Shields</b></span>
           </div>
         </div>
 
-        <button id="btn-play" class="btn-primary pulse">PLAY LEVEL 1</button>
+        <button id="btn-play" class="btn-primary pulse">TAP TO FLY ▶</button>
         <button id="btn-open-buy" class="btn-secondary buy-btn" style="margin-top: 10px; background: linear-gradient(135deg, #ffd600, #ff9100); color: #212121; font-weight: 900;">⭐ GET FULL GAME - ₹49</button>
         <div class="high-score-label">BEST SCORE: <span id="start-high-score">0</span></div>
-      </div>
-    </div>
-
-    <!-- Overlay: Level Complete Screen -->
-    <div id="screen-level-complete" class="screen-overlay">
-      <div class="card-modal celebrate">
-        <div class="confetti-icon">🏆</div>
-        <h2>LEVEL COMPLETED!</h2>
-        <div class="stars-rating" id="stars-display" style="font-size: 32px; margin: 8px 0; letter-spacing: 4px;">⭐⭐⭐</div>
-        <div class="completed-word-box">
-          <span class="sub-label">Coins Collected:</span>
-          <div id="completed-coins" class="highlight-word">🪙 5 / 5</div>
-        </div>
-        <div class="level-rewards">
-          <div class="reward-item">⭐ +<span id="reward-pts">500</span> Pts</div>
-          <div class="reward-item">💰 Bank: <span id="total-coins-bank">5</span></div>
-        </div>
-        <button id="btn-next-level" class="btn-primary">NEXT LEVEL ➔</button>
       </div>
     </div>
 
@@ -118,12 +96,12 @@
             <span id="final-high-score" class="stat-val">0</span>
           </div>
           <div class="stat-box">
-            <span class="stat-name">LEVEL REACHED</span>
-            <span id="final-level" class="stat-val">1</span>
+            <span class="stat-name">COINS IN RUN</span>
+            <span id="final-coins-count" class="stat-val">0</span>
           </div>
           <div class="stat-box">
-            <span class="stat-name">COINS COLLECTED</span>
-            <span id="final-coins-count" class="stat-val">0</span>
+            <span class="stat-name">TOTAL COINS</span>
+            <span id="final-total-coins" class="stat-val">0</span>
           </div>
         </div>
 
@@ -148,17 +126,28 @@
       <div class="card-modal">
         <div class="confetti-icon">💎</div>
         <h2>GET FULL GAME</h2>
-        <p style="color: #90caf9; font-size: 13px; margin: 6px 0 16px 0;">Unlimited Infinite Levels & Zero Ads</p>
+        <p style="color: #90caf9; font-size: 13px; margin: 4px 0 12px 0;">Unlimited Coins, VIP Golden Glow & Zero Ads</p>
         
-        <div style="background: rgba(255,255,255,0.06); padding: 14px; border-radius: 14px; margin-bottom: 16px;">
-          <div style="font-size: 13px; color: #e0e0e0; margin-bottom: 8px;">Scan & Pay via GPay / PhonePe / Paytm:</div>
-          <img id="upi-qr" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=upi%3A%2F%2Fpay%3Fpa%3DKumartoshit82-3%40oksbi%26pn%3DToshit%2520Kumar%26am%3D49%26cu%3DINR" alt="UPI QR" style="border-radius: 10px; width: 145px; height: 145px; background: #fff; padding: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
-          <div style="font-family: 'Fredoka One', cursive; font-size: 24px; color: #ffd600; margin-top: 8px;">₹49 Only</div>
-          <div style="font-size: 11px; color: #90caf9; margin-top: 4px; word-break: break-all;">UPI: <b>Kumartoshit82-3@oksbi</b></div>
+        <div style="background: rgba(255,255,255,0.06); padding: 12px; border-radius: 14px; margin-bottom: 12px;">
+          <div style="font-size: 12px; color: #e0e0e0; margin-bottom: 6px;">Scan & Pay via GPay / PhonePe / Paytm:</div>
+          <img id="upi-qr" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=upi%3A%2F%2Fpay%3Fpa%3DKumartoshit82-3%40oksbi%26pn%3DToshit%2520Kumar%26am%3D49%26cu%3DINR" alt="UPI QR" style="border-radius: 10px; width: 130px; height: 130px; background: #fff; padding: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
+          <div style="font-family: 'Fredoka One', cursive; font-size: 22px; color: #ffd600; margin-top: 6px;">₹49 Only</div>
+          <div style="font-size: 11px; color: #90caf9; margin-top: 2px; word-break: break-all;">UPI ID: <b>Kumartoshit82-3@oksbi</b></div>
         </div>
 
-        <a id="btn-upi-direct" href="upi://pay?pa=Kumartoshit82-3@oksbi&pn=Toshit%20Kumar&am=49&cu=INR" class="btn-primary" style="display: block; text-decoration: none; margin-bottom: 10px;">⚡ PAY VIA UPI APP</a>
-        <button id="btn-close-buy" class="btn-secondary">CLOSE ✕</button>
+        <a id="btn-upi-direct" href="upi://pay?pa=Kumartoshit82-3@oksbi&pn=Toshit%20Kumar&am=49&cu=INR" class="btn-primary" style="display: block; text-decoration: none; margin-bottom: 10px; padding: 12px 14px; font-size: 16px;">⚡ PAY VIA UPI APP</a>
+
+        <!-- Payment Verification Section -->
+        <div class="utr-verify-box" style="background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 10px 12px; margin-bottom: 12px; text-align: left;">
+          <label for="input-utr" style="display: block; font-size: 11px; color: #e0e0e0; margin-bottom: 5px; font-weight: 700;">Enter 12-Digit UPI UTR / Ref No. after payment:</label>
+          <div style="display: flex; gap: 6px;">
+            <input type="text" id="input-utr" maxlength="12" placeholder="e.g. 429182374619" style="flex: 1; min-width: 0; padding: 9px 10px; border-radius: 8px; border: 1.5px solid rgba(255,255,255,0.25); background: rgba(0,0,0,0.6); color: #ffd600; font-family: 'Fredoka One', cursive; font-size: 13px; letter-spacing: 1px; outline: none; text-align: center;">
+            <button id="btn-verify-utr" class="btn-primary" style="width: auto; padding: 9px 14px; font-size: 13px; margin: 0; box-shadow: none; white-space: nowrap;">VERIFY</button>
+          </div>
+          <div id="utr-status-msg" style="font-size: 11px; margin-top: 6px; display: none; line-height: 1.4;"></div>
+        </div>
+
+        <button id="btn-close-buy" class="btn-secondary" style="padding: 10px 20px;">CLOSE ✕</button>
       </div>
     </div>
   </div>

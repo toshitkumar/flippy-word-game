@@ -96,6 +96,34 @@ body {
   letter-spacing: 0.5px;
 }
 
+.coin-badge {
+  background: rgba(255, 214, 0, 0.22);
+  border-color: #ffd600;
+  box-shadow: 0 0 10px rgba(255, 214, 0, 0.35);
+  font-size: 15px;
+  color: #fff9c4;
+}
+
+.coin-badge .badge-icon {
+  font-size: 16px;
+  display: inline-block;
+  animation: coinIconBounce 2s infinite ease-in-out;
+}
+
+@keyframes coinIconBounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.18); }
+}
+
+.hud-center {
+  pointer-events: auto;
+}
+
+.best-badge {
+  background: rgba(76, 175, 80, 0.25);
+  border-color: #4caf50;
+}
+
 .shield-badge {
   background: rgba(0, 188, 212, 0.5);
   border-color: #00e5ff;

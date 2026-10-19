@@ -193,22 +193,15 @@ class SoundManager {
   }
 }
 
-// --- Level Manager (Procedural Infinite Coin Levels) ---
+// --- Endless Level Manager (Single Continuous Infinite Flight) ---
 class LevelManager {
-  getTargetForLevel(level) {
-    if (level === 1) return 5;
-    if (level === 2) return 8;
-    if (level === 3) return 12;
-    if (level === 4) return 16;
-    if (level === 5) return 20;
-    return 20 + (level - 5) * 4; // Infinite progressive levels
-  }
-
-  getDifficultyConfig(level) {
-    const baseSpeed = 2.0;
-    const speedBoost = Math.min(1.5, (level - 1) * 0.05);
-    const pipeGap = Math.max(165, 210 - Math.min(45, (level - 1) * 1.5));
-    const pipeInterval = Math.max(115, 155 - Math.min(35, (level - 1) * 0.8));
+  getDifficultyConfig(score = 0) {
+    // Smooth progressive challenge based on current score
+    const progress = Math.min(score / 6000, 1.0);
+    const baseSpeed = 2.1;
+    const speedBoost = progress * 1.5; // 2.1 up to 3.6
+    const pipeGap = Math.max(165, 210 - progress * 40);
+    const pipeInterval = Math.max(115, Math.round(155 - progress * 35));
     return {
       scrollSpeed: baseSpeed + speedBoost,
       pipeGap: pipeGap,
@@ -344,6 +337,7 @@ class FlippyCoinGame {
       levelDisplay: document.getElementById('level-display'),
       scoreDisplay: document.getElementById('score-display'),
       coinCurrent: document.getElementById('coin-current'),
+      hudHighScore: document.getElementById('hud-high-score'),
       coinGoal: document.getElementById('coin-goal'),
       coinBarFill: document.getElementById('coin-bar-fill'),
       livesDisplay: document.getElementById('lives-display'),
@@ -362,6 +356,7 @@ class FlippyCoinGame {
       finalHighScore: document.getElementById('final-high-score'),
       finalLevel: document.getElementById('final-level'),
       finalCoinsCount: document.getElementById('final-coins-count'),
+      finalTotalCoins: document.getElementById('final-total-coins'),
       btnPlay: document.getElementById('btn-play'),
       btnPause: document.getElementById('btn-pause'),
       btnResume: document.getElementById('btn-resume'),
@@ -381,8 +376,8 @@ class FlippyCoinGame {
     this.totalCoins = 0;
     this.lives = 3;
     this.currentLevel = 1;
+    this.coinsInCurrentRun = 0;
     this.coinsInCurrentLevel = 0;
-    this.levelTargetCoins = 5;
 
     // Powerup Timers
     this.shieldActive = false;
@@ -430,7 +425,13 @@ class FlippyCoinGame {
       if (data) {
         this.highScore = data.highScore || 0;
         this.totalCoins = data.totalCoins || 0;
+        this.isPremium = data.isPremium || false;
         if (this.ui.startHighScore) this.ui.startHighScore.textContent = this.highScore;
+        if (this.ui.hudHighScore) this.ui.hudHighScore.textContent = this.highScore;
+        if (this.isPremium && this.ui.btnOpenBuy) {
+          this.ui.btnOpenBuy.textContent = '👑 VIP SUPPORTER (ACTIVATED)';
+          this.ui.btnOpenBuy.style.background = 'linear-gradient(135deg, #00e676, #00b0ff)';
+        }
       }
     }
   }
@@ -438,10 +439,13 @@ class FlippyCoinGame {
   saveGameData() {
     if (this.score > this.highScore) {
       this.highScore = this.score;
+      if (this.ui.hudHighScore) this.ui.hudHighScore.textContent = this.highScore;
+      if (this.ui.startHighScore) this.ui.startHighScore.textContent = this.highScore;
     }
     const data = {
       highScore: this.highScore,
       totalCoins: this.totalCoins,
+      isPremium: this.isPremium || false,
       timestamp: Date.now()
     };
     localStorage.setItem('__FLIPPY_COIN_SAVE__', AntiCheat.encode(data));
@@ -470,48 +474,30 @@ class FlippyCoinGame {
     }
   }
 
-  setupLevel(level) {
-    this.currentLevel = level;
-    this.levelTargetCoins = this.levelMgr.getTargetForLevel(level);
-    this.coinsInCurrentLevel = 0;
-    this.magnetTimer = 0;
-    this.sound.comboCount = 0;
-
-    this.ui.levelDisplay.textContent = this.currentLevel;
-    this.ui.coinCurrent.textContent = '0';
-    this.ui.coinGoal.textContent = this.levelTargetCoins;
-    this.ui.coinBarFill.style.width = '0%';
-
-    this.updateShieldUI();
-    this.updateMagnetUI();
-
-    this.pipes = [];
-    this.collectibles = [];
-    this.frameCounter = 0;
-  }
-
   startNewGame() {
     this.sound.init();
     this.score = 0;
     this.lives = 3;
+    this.coinsInCurrentRun = 0;
     this.shieldActive = false;
     this.magnetTimer = 0;
+    this.pipes = [];
+    this.collectibles = [];
+    this.frameCounter = 0;
+    this.sound.comboCount = 0;
+
     this.updateLivesDisplay();
+    this.updateShieldUI();
+    this.updateMagnetUI();
+
     this.ui.scoreDisplay.textContent = '0';
+    if (this.ui.coinCurrent) this.ui.coinCurrent.textContent = '0';
+    if (this.ui.hudHighScore) this.ui.hudHighScore.textContent = this.highScore;
     
     this.bird.y = this.canvas.height * 0.4;
     this.bird.velocity = 0;
     this.bird.rotation = 0;
 
-    this.setupLevel(1);
-    this.setScreen('NONE');
-    this.state = 'PLAYING';
-  }
-
-  resumeAfterLevelComplete() {
-    this.setupLevel(this.currentLevel + 1);
-    this.bird.y = this.canvas.height * 0.4;
-    this.bird.velocity = 0;
     this.setScreen('NONE');
     this.state = 'PLAYING';
   }
@@ -556,16 +542,14 @@ class FlippyCoinGame {
   }
 
   setScreen(name) {
-    this.ui.screenStart.classList.remove('active');
-    this.ui.screenLevelComplete.classList.remove('active');
-    this.ui.screenGameOver.classList.remove('active');
-    this.ui.screenPause.classList.remove('active');
+    if (this.ui.screenStart) this.ui.screenStart.classList.remove('active');
+    if (this.ui.screenGameOver) this.ui.screenGameOver.classList.remove('active');
+    if (this.ui.screenPause) this.ui.screenPause.classList.remove('active');
     if (this.ui.screenBuy) this.ui.screenBuy.classList.remove('active');
 
-    if (name === 'START') this.ui.screenStart.classList.add('active');
-    if (name === 'LEVEL_COMPLETE') this.ui.screenLevelComplete.classList.add('active');
-    if (name === 'GAMEOVER') this.ui.screenGameOver.classList.add('active');
-    if (name === 'PAUSE') this.ui.screenPause.classList.add('active');
+    if (name === 'START' && this.ui.screenStart) this.ui.screenStart.classList.add('active');
+    if (name === 'GAMEOVER' && this.ui.screenGameOver) this.ui.screenGameOver.classList.add('active');
+    if (name === 'PAUSE' && this.ui.screenPause) this.ui.screenPause.classList.add('active');
     if (name === 'BUY' && this.ui.screenBuy) this.ui.screenBuy.classList.add('active');
   }
 
@@ -586,9 +570,8 @@ class FlippyCoinGame {
     this.canvas.addEventListener('mousedown', triggerFlap);
     this.canvas.addEventListener('touchstart', triggerFlap, { passive: false });
 
-    this.ui.btnPlay.addEventListener('click', () => this.startNewGame());
-    this.ui.btnRetry.addEventListener('click', () => this.startNewGame());
-    this.ui.btnNextLevel.addEventListener('click', () => this.resumeAfterLevelComplete());
+    if (this.ui.btnPlay) this.ui.btnPlay.addEventListener('click', () => this.startNewGame());
+    if (this.ui.btnRetry) this.ui.btnRetry.addEventListener('click', () => this.startNewGame());
 
     if (this.ui.btnOpenBuy) {
       this.ui.btnOpenBuy.addEventListener('click', (e) => {
@@ -601,6 +584,58 @@ class FlippyCoinGame {
       this.ui.btnCloseBuy.addEventListener('click', (e) => {
         e.stopPropagation();
         this.setScreen('START');
+      });
+    }
+
+    // UTR / Payment Validation Handler
+    const inputUtr = document.getElementById('input-utr');
+    const btnVerifyUtr = document.getElementById('btn-verify-utr');
+    const utrMsg = document.getElementById('utr-status-msg');
+
+    if (btnVerifyUtr && inputUtr && utrMsg) {
+      btnVerifyUtr.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const utrVal = inputUtr.value.trim();
+        utrMsg.style.display = 'block';
+
+        if (!utrVal) {
+          utrMsg.style.color = '#ff5252';
+          utrMsg.textContent = '⚠️ Kripya payment ke baad 12-digit UTR/Ref No. enter karein.';
+          return;
+        }
+
+        // Validate strictly 12 digits
+        const utrRegex = /^\d{12}$/;
+        if (!utrRegex.test(utrVal)) {
+          utrMsg.style.color = '#ff5252';
+          utrMsg.textContent = '❌ Invalid UTR! UTR 12-digit ka numeric number hona chahiye.';
+          return;
+        }
+
+        // Check for dummy identical repeating digits (e.g. 000000000000, 111111111111)
+        if (/^(\d)\1{11}$/.test(utrVal)) {
+          utrMsg.style.color = '#ff5252';
+          utrMsg.textContent = '❌ Invalid Reference! Asli bank UTR enter karein.';
+          return;
+        }
+
+        // Verified Successfully!
+        utrMsg.style.color = '#00e676';
+        utrMsg.textContent = '✅ Payment Verified! VIP Supporter Perks Activated 👑';
+        this.isPremium = true;
+        this.totalCoins += 1000; // 1,000 Bonus Coins Reward
+        this.sound.playLevelUp();
+        this.fx.spawnConfetti(this.canvas.width, this.canvas.height);
+        this.saveGameData();
+
+        if (this.ui.btnOpenBuy) {
+          this.ui.btnOpenBuy.textContent = '👑 VIP ACTIVATED (+1000 COINS)';
+          this.ui.btnOpenBuy.style.background = 'linear-gradient(135deg, #00e676, #00b0ff)';
+        }
+
+        setTimeout(() => {
+          this.setScreen('START');
+        }, 1800);
       });
     }
 
@@ -629,7 +664,7 @@ class FlippyCoinGame {
   }
 
   spawnPipesAndCoins() {
-    const diff = this.levelMgr.getDifficultyConfig(this.currentLevel);
+    const diff = this.levelMgr.getDifficultyConfig(this.score);
     const minHeight = 65;
     const maxHeight = this.groundY - diff.pipeGap - minHeight;
     const topHeight = Math.floor(Math.random() * (maxHeight - minHeight)) + minHeight;
@@ -678,8 +713,8 @@ class FlippyCoinGame {
       return;
     }
 
-    // 15% chance for Ruby Gem (worth 3 coins)
-    if (roll < 0.37 && this.currentLevel >= 2) {
+    // 18% chance for Ruby Gem (worth 3 coins) as score grows
+    if (roll < 0.38 && this.score > 250) {
       this.collectibles.push({
         x: pipeX + 110,
         y: gapCenterY,
@@ -701,10 +736,10 @@ class FlippyCoinGame {
       collected: false
     });
 
-    // 40% chance of a second coin right behind it
-    if (Math.random() < 0.40) {
+    // 45% chance of a second coin right behind it
+    if (Math.random() < 0.45) {
       this.collectibles.push({
-        x: pipeX + 140,
+        x: pipeX + 145,
         y: gapCenterY + (Math.random() - 0.5) * 30,
         type: 'COIN',
         radius: 16,
@@ -719,14 +754,14 @@ class FlippyCoinGame {
 
     if (item.type === 'COIN') {
       this.sound.playCoin();
-      this.coinsInCurrentLevel++;
+      this.coinsInCurrentRun++;
       this.totalCoins++;
       this.score += 100;
       this.fx.spawnCoinSparkle(item.x, item.y, '#ffd600', 18);
       this.fx.addFloatingText(item.x, item.y - 15, '+1 🪙', '#ffd600');
     } else if (item.type === 'GEM') {
       this.sound.playGem();
-      this.coinsInCurrentLevel += 3;
+      this.coinsInCurrentRun += 3;
       this.totalCoins += 3;
       this.score += 350;
       this.fx.spawnCoinSparkle(item.x, item.y, '#ff1744', 24);
@@ -745,38 +780,21 @@ class FlippyCoinGame {
       this.fx.addFloatingText(item.x, item.y - 15, 'COIN MAGNET! 🧲', '#ff4081');
     }
 
+    // Every 10 coins: celebratory milestone bonus without stopping the flight!
+    if (this.coinsInCurrentRun > 0 && this.coinsInCurrentRun % 10 === 0 && (item.type === 'COIN' || item.type === 'GEM')) {
+      this.sound.playLevelUp();
+      this.score += 250;
+      this.fx.spawnConfetti(this.canvas.width, this.canvas.height);
+      this.fx.addFloatingText(this.bird.x, this.bird.y - 30, `🎉 ${this.coinsInCurrentRun} COINS STREAK! +250 PTS`, '#ffd600');
+    }
+
     // Update HUD
     this.ui.scoreDisplay.textContent = this.score;
-    this.ui.coinCurrent.textContent = Math.min(this.coinsInCurrentLevel, this.levelTargetCoins);
-    const progressPercent = Math.min(100, (this.coinsInCurrentLevel / this.levelTargetCoins) * 100);
-    this.ui.coinBarFill.style.width = progressPercent + '%';
-
-    // Check Level Complete!
-    if (this.coinsInCurrentLevel >= this.levelTargetCoins) {
-      this.triggerLevelComplete();
+    if (this.ui.coinCurrent) this.ui.coinCurrent.textContent = this.coinsInCurrentRun;
+    if (this.score > this.highScore) {
+      this.highScore = this.score;
+      if (this.ui.hudHighScore) this.ui.hudHighScore.textContent = this.highScore;
     }
-  }
-
-  triggerLevelComplete() {
-    this.sound.playLevelUp();
-    this.state = 'LEVEL_COMPLETE';
-    const reward = 500 + this.currentLevel * 100;
-    this.score += reward;
-    this.ui.scoreDisplay.textContent = this.score;
-    this.saveGameData();
-
-    this.fx.spawnConfetti(this.canvas.width, this.canvas.height);
-
-    // Calculate Stars based on lives remaining
-    let starsStr = '⭐⭐⭐';
-    if (this.lives === 2) starsStr = '⭐⭐';
-    if (this.lives <= 1) starsStr = '⭐';
-
-    this.ui.starsDisplay.textContent = starsStr;
-    this.ui.completedCoins.textContent = `🪙 ${this.coinsInCurrentLevel} / ${this.levelTargetCoins}`;
-    this.ui.rewardPts.textContent = reward;
-    this.ui.totalCoinsBank.textContent = this.totalCoins;
-    this.setScreen('LEVEL_COMPLETE');
   }
 
   triggerGameOver(reason) {
@@ -787,8 +805,9 @@ class FlippyCoinGame {
 
     this.ui.finalScore.textContent = this.score;
     this.ui.finalHighScore.textContent = this.highScore;
-    this.ui.finalLevel.textContent = this.currentLevel;
-    this.ui.finalCoinsCount.textContent = this.totalCoins;
+    if (this.ui.finalCoinsCount) this.ui.finalCoinsCount.textContent = this.coinsInCurrentRun;
+    const totalEl = document.getElementById('final-total-coins');
+    if (totalEl) totalEl.textContent = this.totalCoins;
     this.setScreen('GAMEOVER');
   }
 
@@ -816,7 +835,7 @@ class FlippyCoinGame {
       }
     }
 
-    const diff = this.levelMgr.getDifficultyConfig(this.currentLevel);
+    const diff = this.levelMgr.getDifficultyConfig(this.score);
 
     // Bird Physics (Smooth float & terminal velocity cap)
     this.bird.velocity += this.bird.gravity;
@@ -969,10 +988,11 @@ class FlippyCoinGame {
     const w = this.canvas.width;
     const h = this.canvas.height;
     const grad = this.ctx.createLinearGradient(0, 0, 0, h);
-    if (this.currentLevel % 3 === 1) {
+    const cycle = Math.floor(this.score / 1500) % 3;
+    if (cycle === 0) {
       grad.addColorStop(0, '#2193b0');
       grad.addColorStop(1, '#6dd5ed'); // Crisp Cyan Sky
-    } else if (this.currentLevel % 3 === 2) {
+    } else if (cycle === 1) {
       grad.addColorStop(0, '#ff7e5f');
       grad.addColorStop(1, '#feb47b'); // Sunset
     } else {
