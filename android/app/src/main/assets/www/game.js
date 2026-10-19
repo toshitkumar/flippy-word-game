@@ -363,10 +363,7 @@ class FlippyCoinGame {
       btnRestart: document.getElementById('btn-restart'),
       btnNextLevel: document.getElementById('btn-next-level'),
       btnRetry: document.getElementById('btn-retry'),
-      btnSoundToggle: document.getElementById('btn-sound-toggle'),
-      screenBuy: document.getElementById('screen-buy'),
-      btnOpenBuy: document.getElementById('btn-open-buy'),
-      btnCloseBuy: document.getElementById('btn-close-buy')
+      btnSoundToggle: document.getElementById('btn-sound-toggle')
     };
 
     // State Variables
@@ -545,12 +542,10 @@ class FlippyCoinGame {
     if (this.ui.screenStart) this.ui.screenStart.classList.remove('active');
     if (this.ui.screenGameOver) this.ui.screenGameOver.classList.remove('active');
     if (this.ui.screenPause) this.ui.screenPause.classList.remove('active');
-    if (this.ui.screenBuy) this.ui.screenBuy.classList.remove('active');
 
     if (name === 'START' && this.ui.screenStart) this.ui.screenStart.classList.add('active');
     if (name === 'GAMEOVER' && this.ui.screenGameOver) this.ui.screenGameOver.classList.add('active');
     if (name === 'PAUSE' && this.ui.screenPause) this.ui.screenPause.classList.add('active');
-    if (name === 'BUY' && this.ui.screenBuy) this.ui.screenBuy.classList.add('active');
   }
 
   bindEvents() {
@@ -572,72 +567,6 @@ class FlippyCoinGame {
 
     if (this.ui.btnPlay) this.ui.btnPlay.addEventListener('click', () => this.startNewGame());
     if (this.ui.btnRetry) this.ui.btnRetry.addEventListener('click', () => this.startNewGame());
-
-    if (this.ui.btnOpenBuy) {
-      this.ui.btnOpenBuy.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.setScreen('BUY');
-      });
-    }
-
-    if (this.ui.btnCloseBuy) {
-      this.ui.btnCloseBuy.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.setScreen('START');
-      });
-    }
-
-    // UTR / Payment Validation Handler
-    const inputUtr = document.getElementById('input-utr');
-    const btnVerifyUtr = document.getElementById('btn-verify-utr');
-    const utrMsg = document.getElementById('utr-status-msg');
-
-    if (btnVerifyUtr && inputUtr && utrMsg) {
-      btnVerifyUtr.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const utrVal = inputUtr.value.trim();
-        utrMsg.style.display = 'block';
-
-        if (!utrVal) {
-          utrMsg.style.color = '#ff5252';
-          utrMsg.textContent = '⚠️ Kripya payment ke baad 12-digit UTR/Ref No. enter karein.';
-          return;
-        }
-
-        // Validate strictly 12 digits
-        const utrRegex = /^\d{12}$/;
-        if (!utrRegex.test(utrVal)) {
-          utrMsg.style.color = '#ff5252';
-          utrMsg.textContent = '❌ Invalid UTR! UTR 12-digit ka numeric number hona chahiye.';
-          return;
-        }
-
-        // Check for dummy identical repeating digits (e.g. 000000000000, 111111111111)
-        if (/^(\d)\1{11}$/.test(utrVal)) {
-          utrMsg.style.color = '#ff5252';
-          utrMsg.textContent = '❌ Invalid Reference! Asli bank UTR enter karein.';
-          return;
-        }
-
-        // Verified Successfully!
-        utrMsg.style.color = '#00e676';
-        utrMsg.textContent = '✅ Payment Verified! VIP Supporter Perks Activated 👑';
-        this.isPremium = true;
-        this.totalCoins += 1000; // 1,000 Bonus Coins Reward
-        this.sound.playLevelUp();
-        this.fx.spawnConfetti(this.canvas.width, this.canvas.height);
-        this.saveGameData();
-
-        if (this.ui.btnOpenBuy) {
-          this.ui.btnOpenBuy.textContent = '👑 VIP ACTIVATED (+1000 COINS)';
-          this.ui.btnOpenBuy.style.background = 'linear-gradient(135deg, #00e676, #00b0ff)';
-        }
-
-        setTimeout(() => {
-          this.setScreen('START');
-        }, 1800);
-      });
-    }
 
     this.ui.btnPause.addEventListener('click', () => {
       if (this.state === 'PLAYING') {
